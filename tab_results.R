@@ -142,6 +142,7 @@ merge_inc_cum_summaries <- function(summ_inc, summ_cum){
 xtable_summary_tab <- function(summary_tab){
   tab <- summary_tab$summary_tab_imputed
   
+  # re-format proportions:
   columns_coverage <- colnames(tab)[grepl("coverage", colnames(tab))]
   for(co in columns_coverage){
     inds <- which(!is.na(tab[, co]))
@@ -149,16 +150,15 @@ xtable_summary_tab <- function(summary_tab){
     tab[inds, co] <- paste0(tab[inds, co], "/", summary_tab$available_per_model[inds, co])
   }
   
-  # find out where to add stars and re-format proportions:
-  stars <- rep("", nrow(tab))
-  for(i in 1:nrow(tab)){
-    inds <- which(!is.na(summary_tab$available_per_model[i, -1]))
-    if(any(summary_tab$available_per_model[i, -1][inds] > 0 &
-           summary_tab$available_per_model[i, -1][inds] < summary_tab$available_per_model_max[inds])){
-      stars[i] <- "*"
-    }
+  # add stars:
+  columns_scores <- colnames(tab)[grepl("ae", colnames(tab)) | grepl("wis", colnames(tab))]
+  
+  for(co in columns_scores){
+    inds <- which(summary_tab$available_per_model[, co] < summary_tab$available_per_model_max[co] &
+                    !is.na(tab[, co]))
+    tab[, co] <- format(tab[, co], digits = 0, scientific = FALSE, big.mark = ",")
+    tab[inds, co] <- paste0(tab[inds, co], "*")
   }
-  tab$model <- paste0(tab$model, stars)
   
   tab <- tab[order(tab$model), ]
   
@@ -174,11 +174,8 @@ xtable_summary_tab <- function(summary_tab){
   tab_to_print <- rbind(tab_members, tab_baselines, tab_ensembles)
   
   hline.after <- if(nrow(tab_members) != 0) nrow(tab_members) + c(0, nrow(tab_baselines)) else NULL
-  digits <- rep(0, ncol(tab_to_print))
-  digits[grepl("coverage.", colnames(tab_to_print))] <- 2
-  digits <- c(0, digits)
   
-  print(xtable(tab_to_print, digits = digits), hline.after = hline.after,
+  print(xtable(tab_to_print), hline.after = hline.after,
         include.rownames=FALSE, only.contents = TRUE, include.colnames = FALSE,
         format.args = list(big.mark = ","))
 }
@@ -373,3 +370,118 @@ legend("center", legend = c(models_horizons_poland, "KIT-baseline"),
        lty = c(rep(1, length(models_pl$main) + 1), 2, NA),
        pch = c(rep(NA, length(models_horizons_poland)), 15))
 dev.off()
+
+
+### compute tables for additional ensembles (i.e. with all models included):
+
+dat_evaluation_additional_ensembles <- read.csv("additional_ensembles/evaluation_additional_ensembles_ECDC.csv",
+                                                colClasses = list("target_end_date" = "Date", "forecast_date" = "Date", "timezero" = "Date"),
+                                                stringsAsFactors = FALSE)
+
+
+# Germany, cases:
+
+## 1 + 2 wk
+summary_gm_inc_case <- generate_summary(dat_eval = dat_evaluation_additional_ensembles, target_type = "case", inc_or_cum = "inc", location = "GM",
+                                        first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+
+summary_gm_cum_case <- generate_summary(dat_eval = dat_evaluation_additional_ensembles, target_type = "case", inc_or_cum = "cum", location = "GM",
+                                        first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+
+
+summary_gm_inc_case_12 <- restrict_summary(summary_gm_inc_case)
+summary_gm_cum_case_12 <- restrict_summary(summary_gm_cum_case)
+
+summary_gm_case_12 <- merge_inc_cum_summaries(summary_gm_inc_case_12,
+                                              summary_gm_cum_case_12)
+
+xtable_summary_tab(summary_gm_case_12)
+
+summary_gm_inc_case_34 <- restrict_summary(summary_gm_inc_case, horizons = 3:4)
+summary_gm_cum_case_34 <- restrict_summary(summary_gm_cum_case, horizons = 3:4)
+
+summary_gm_case_34 <- merge_inc_cum_summaries(summary_gm_inc_case_34,
+                                              summary_gm_cum_case_34)
+
+## Germany, deaths:
+
+## 1 + 2 wk
+summary_gm_inc_death <- generate_summary(dat_eval = dat_evaluation_additional_ensembles, target_type = "death", inc_or_cum = "inc", location = "GM",
+                                         first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+
+summary_gm_cum_death <- generate_summary(dat_eval = dat_evaluation_additional_ensembles, target_type = "death", inc_or_cum = "cum", location = "GM",
+                                         first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+
+
+summary_gm_inc_death_12 <- restrict_summary(summary_gm_inc_death)
+summary_gm_cum_death_12 <- restrict_summary(summary_gm_cum_death)
+
+summary_gm_death_12 <- merge_inc_cum_summaries(summary_gm_inc_death_12,
+                                               summary_gm_cum_death_12)
+
+
+summary_gm_inc_death_34 <- restrict_summary(summary_gm_inc_death, horizons = 3:4)
+summary_gm_cum_death_34 <- restrict_summary(summary_gm_cum_death, horizons = 3:4)
+
+summary_gm_death_34 <- merge_inc_cum_summaries(summary_gm_inc_death_34,
+                                               summary_gm_cum_death_34)
+
+
+
+# Poland, cases:
+
+## 1 + 2 wk
+summary_pl_inc_case <- generate_summary(dat_eval = dat_evaluation_additional_ensembles, target_type = "case", inc_or_cum = "inc", location = "PL",
+                                        first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+
+summary_pl_cum_case <- generate_summary(dat_eval = dat_evaluation_additional_ensembles, target_type = "case", inc_or_cum = "cum", location = "PL",
+                                        first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+
+
+summary_pl_inc_case_12 <- restrict_summary(summary_pl_inc_case)
+summary_pl_cum_case_12 <- restrict_summary(summary_pl_cum_case)
+
+summary_pl_case_12 <- merge_inc_cum_summaries(summary_pl_inc_case_12,
+                                              summary_pl_cum_case_12)
+
+
+summary_pl_inc_case_34 <- restrict_summary(summary_pl_inc_case, horizons = 3:4)
+summary_pl_cum_case_34 <- restrict_summary(summary_pl_cum_case, horizons = 3:4)
+
+summary_pl_case_34 <- merge_inc_cum_summaries(summary_pl_inc_case_34,
+                                              summary_pl_cum_case_34)
+
+## Poland, deaths:
+
+## 1 + 2 wk
+summary_pl_inc_death <- generate_summary(dat_eval = dat_evaluation_additional_ensembles, target_type = "death", inc_or_cum = "inc", location = "PL",
+                                         first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+
+summary_pl_cum_death <- generate_summary(dat_eval = dat_evaluation_additional_ensembles, target_type = "death", inc_or_cum = "cum", location = "PL",
+                                         first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+
+
+summary_pl_inc_death_12 <- restrict_summary(summary_pl_inc_death)
+summary_pl_cum_death_12 <- restrict_summary(summary_pl_cum_death)
+
+summary_pl_death_12 <- merge_inc_cum_summaries(summary_pl_inc_death_12,
+                                               summary_pl_cum_death_12)
+
+
+summary_pl_inc_death_34 <- restrict_summary(summary_pl_inc_death, horizons = 3:4)
+summary_pl_cum_death_34 <- restrict_summary(summary_pl_cum_death, horizons = 3:4)
+
+summary_pl_death_34 <- merge_inc_cum_summaries(summary_pl_inc_death_34,
+                                               summary_pl_cum_death_34)
+
+for(fil in c("summary_gm_case_12",
+             "summary_gm_death_12",
+             "summary_gm_case_34",
+             "summary_gm_death_34",
+             "summary_pl_case_12",
+             "summary_pl_death_12",
+             "summary_pl_case_34",
+             "summary_pl_death_34")){
+  writeLines(xtable_summary_tab(get(fil)), con = paste0("../input/", fil, "_additional_ensembles_", truth, ".tex"))
+}
+
