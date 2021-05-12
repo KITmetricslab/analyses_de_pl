@@ -24,7 +24,7 @@ options(scipen=5)
 
 # custom function to plot time series:
 plot_ts <- function(dat_ecdc, dat_jhu, variable, main = "", col_gm = "black", col_pl = "red", points = FALSE,
-                    highlight = NULL, col_highlight = "lightgrey", ylim = NULL, add = FALSE, ...){
+                    cex.points = 0.9, highlight = NULL, col_highlight = "lightgrey", ylim = NULL, add = FALSE, ...){
   dat_ecdc_gm <- subset(dat_ecdc, location == "GM")
   dat_ecdc_pl <- subset(dat_ecdc, location == "PL")
   dat_jhu_gm <- subset(dat_jhu, location == "GM")
@@ -46,10 +46,10 @@ plot_ts <- function(dat_ecdc, dat_jhu, variable, main = "", col_gm = "black", co
   lines(dat_jhu_pl$date, dat_jhu_pl[, variable], type = "l", lty = 2, col = col_pl)
 
   if(points){
-    points(dat_ecdc_gm$date, dat_ecdc_gm[, variable], pch = 15, xlab = "", ylab = "", cex = 0.9, col = col_gm)
-    points(dat_jhu_gm$date, dat_jhu_gm[, variable], pch = 17, xlab = "", ylab = "", col = col_gm, cex = 0.9)
-    points(dat_ecdc_pl$date, dat_ecdc_pl[, variable], pch = 15, xlab = "", ylab = "", cex = 0.9, col = col_pl)
-    points(dat_jhu_pl$date, dat_jhu_pl[, variable], pch = 17, xlab = "", ylab = "", cex = 0.9, col = col_pl)
+    points(dat_ecdc_gm$date, dat_ecdc_gm[, variable], pch = 15, xlab = "", ylab = "", cex = cex.points, col = col_gm)
+    points(dat_jhu_gm$date, dat_jhu_gm[, variable], pch = 17, xlab = "", ylab = "", col = col_gm, cex = cex.points)
+    points(dat_ecdc_pl$date, dat_ecdc_pl[, variable], pch = 15, xlab = "", ylab = "", cex = cex.points, col = col_pl)
+    points(dat_jhu_pl$date, dat_jhu_pl[, variable], pch = 17, xlab = "", ylab = "", cex = cex.points, col = col_pl)
   }
 
   mtext(side = 3, main, cex = 0.8, line = 0.3)
@@ -72,20 +72,25 @@ highlight <- c(as.Date("2020-10-12"), as.Date("2020-12-19"))
 pdf("../figures/time_series.pdf", width = 8.5, height = 5.5)
 
 # structure plot area
-layout(matrix(1:6, ncol = 2), heights = c(3, 1, 2))
-par(las = 1, mar = c(2.5, 4, 3, 2))
+layout(matrix(1:6, ncol = 2), heights = c(1.4, 2.6, 2.1))
 
 # Cases:
 
+# small plot showing also first wave:
+par(mar = c(2.5, 4, 2, 2), las = 1)
+plot_ts(dat_ecdc, dat_jhu, "inc_case", highlight = highlight, points = TRUE,
+        main = "Weekly incident cases", cex.points = 0.7)
+
 # large time series plot:
+par(las = 1, mar = c(2.5, 4, 1, 2))
 plot_ts(dat_ecdc, dat_jhu, "inc_case", highlight = highlight,
         xlim = highlight + c(-38, 14), axes = FALSE,
-        main = "Weekly incident cases", points = TRUE)
+        points = TRUE)
 add_axes(xticks = xticks, xticks_labelled = xticks_labelled)
 
 # Add letters/numbers for events:
-letter_in_circle(as.Date("2020-09-03"), 200000, "1", col = "red") # PL: strict test criteria
-letter_in_circle(as.Date("2020-10-10"), 200000, "2", col = "red") # PL: entire country classified as "yellow zone"
+letter_in_circle(as.Date("2020-09-03"), 200000, "1", col = "red", col_line = "lightgrey") # PL: strict test criteria
+letter_in_circle(as.Date("2020-10-10"), 200000, "2", col = "red", col_line = "lightgrey") # PL: entire country classified as "yellow zone"
 letter_in_circle(as.Date("2020-10-24"), 200000, "3", col = "red") # PL: entire country classified as "red zone" (partial school closure, restaurants closed, gatherings restrictied)
 letter_in_circle(as.Date("2020-10-31"), 180000, "4", col = "red") # PL: relaxed test criteria
 letter_in_circle(as.Date("2020-11-02"), 200000, "a") # DE: semi-lockdown
@@ -96,12 +101,8 @@ letter_in_circle(as.Date("2020-11-28"), 180000, "7", col = "red") # PL: Malls re
 letter_in_circle(as.Date("2020-12-01"), 200000, "c") # DE: reinforcement of contact restrictions https://www.tagesschau.de/inland/corona-plan-bundeslaender-beschluss-103.html
 letter_in_circle(as.Date("2020-12-16"), 200000, "d") # DE: full lockdown (incl school closure)
 
-# small plot showing also first wave:
+# avoid overplotting with vertival dashed lines
 plot_ts(dat_ecdc, dat_jhu, "inc_case", add = TRUE, points = TRUE)
-
-
-par(mar = c(2.5, 4, 0, 2))
-plot_ts(dat_ecdc, dat_jhu, "inc_case", highlight = highlight, yaxt='n', points = TRUE)
 
 # explanation of events:
 plot(NULL, xlim = 0:1, ylim = 0:1, axes = FALSE, xlab = "", ylab = "")
@@ -117,17 +118,21 @@ legend("center", legend = c("Measures in Germany",
 
 # Deaths:
 
-par(mar = c(2.5, 4, 3, 2))
+# small plot showing also first wave:
+par(mar = c(2.5, 4, 2, 2), las = 1)
+plot_ts(dat_ecdc, dat_jhu, "inc_death", highlight = highlight, points = TRUE,
+        main = "Weekly incident deaths", cex.points = 0.7)
 
 # large time series plot:
+par(las = 1, mar = c(2.5, 4, 1, 2))
 plot_ts(dat_ecdc, dat_jhu, "inc_death", highlight = highlight,
-        xlim = highlight + c(-38, 14), axes = FALSE, 
-        main = "Weekly incident deaths" , points = TRUE)
+        xlim = highlight + c(-38, 14), ylim = c(0, 5200),  axes = FALSE,
+        points = TRUE)
 add_axes(xticks = xticks, xticks_labelled = xticks_labelled)
 
 # events:
-letter_in_circle(as.Date("2020-09-03"), 5000, "1", col = "red") # PL: stricter testing criteria
-letter_in_circle(as.Date("2020-10-10"), 5000, "2", col = "red") # PL: entire country classified as "yellow zone"
+letter_in_circle(as.Date("2020-09-03"), 5000, "1", col = "red", col_line = "lightgrey") # PL: stricter testing criteria
+letter_in_circle(as.Date("2020-10-10"), 5000, "2", col = "red", col_line = "lightgrey") # PL: entire country classified as "yellow zone"
 letter_in_circle(as.Date("2020-10-24"), 5000, "3", col = "red") # PL: entire country classified as "red zone" (partial school closure, restaurants closed, gatherings restrictied)
 letter_in_circle(as.Date("2020-10-31"), 4500, "4", col = "red") # PL: relaxed test criteria
 letter_in_circle(as.Date("2020-11-02"), 5000, "a") # DE: semi-lockdown
@@ -144,9 +149,6 @@ legend("bottomright", legend = c("Germany", "Poland", "", "ECDC", "JHU"),
 
 plot_ts(dat_ecdc, dat_jhu, "inc_death", add = TRUE, points = TRUE)
 
-par(mar = c(2.5, 4, 0, 2), las = 1)
-plot_ts(dat_ecdc, dat_jhu, "inc_death", highlight = highlight, yaxt='n', points = TRUE)
-
 # Explanation of measures in Poland:
 plot(NULL, xlim = 0:1, ylim = 0:1, axes = FALSE, xlab = "", ylab = "")
 
@@ -159,7 +161,7 @@ legend("center", legend = c("Measures in Poland",
                             "4 - eased testing criteria (one symptom sufficient; 2020-10-31)",
                             "5 - reinforced restrictions (extension of school closure, ",
                             "  shopping malls closed; 2020-11-07)",
-                            "6 - bulk reporting of 20,000 cases (2020-11-25)",
+                            "6 - bulk reporting of 22,000 cases (2020-11-24)",
                             "7 - shopping malls re-opened (2020-11-28)"), 
        bty = "n", text.col = "red")
 

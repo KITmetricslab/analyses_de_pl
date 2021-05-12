@@ -134,8 +134,8 @@ extreme_forecasts <- function(dat_eval){
 }
 
 
-letter_in_circle <- function(x, y, letter, col = "black", cex = 0.8){
-  abline(v = x, lty = "dashed", col = "white")
+letter_in_circle <- function(x, y, letter, col = "black", col_line = "white", cex = 0.8){
+  abline(v = x, lty = "dashed", col = col_line)
   draw.circle(x = x, y = y, radius = strwidth("aa", cex = cex)/1.7, border = col, col = "white")
   text(x, y, letter, col = col, cex = cex)
 }

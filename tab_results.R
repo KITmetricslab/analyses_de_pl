@@ -19,13 +19,14 @@ dat_evaluation <- read.csv(paste0(path_hub, "/evaluation/evaluation-", truth, ".
 
 dat_evaluation <- subset(dat_evaluation, !(model %in% c("Karlen-pypm",
                                                         "Imperial-ensemble1",
-                                                        "epiforecasts-EpiNow2_secondary")))
+                                                        "epiforecasts-EpiNow2_secondary",
+                                                        "IHME-CurveFit")))
 
 # function to create summary table for horizons 1 through 4:
-generate_summary <- function(dat_eval, target_type, inc_or_cum, location, first_date, last_date){
+generate_summary <- function(dat_eval, target_type, inc_or_cum, location, first_forecast_date, last_observation_date){
   # restrict to relevant entries:
-  tab <- dat_eval[dat_eval$timezero >= first_date &
-                    dat_eval$timezero <= last_date &
+  tab <- dat_eval[dat_eval$timezero >= first_forecast_date &
+                    dat_eval$target_end_date <= last_observation_date &
                     grepl(paste(inc_or_cum, target_type), dat_eval$target) &
                     !grepl("0 wk", dat_eval$target) &
                     !grepl("-1 wk", dat_eval$target) &
@@ -55,11 +56,11 @@ generate_summary <- function(dat_eval, target_type, inc_or_cum, location, first_
                     paste0("coverage0.95.", 1:4))
   
   # identify NA values:
-  tab_wide_is_na <- tab_wide; tab_wide_is_na[, cols_numbers] <- !is.na(tab_wide_is_na[, cols_numbers])
-  tab_wide_is_na$timezero <- NULL
+  tab_wide_is_available <- tab_wide; tab_wide_is_available[, cols_numbers] <- !is.na(tab_wide_is_available[, cols_numbers])
+  tab_wide_is_available$timezero <- NULL
   
   # count number of available scores per model:
-  available_per_model <- aggregate(. ~ model, data = tab_wide_is_na, FUN = sum)
+  available_per_model <- aggregate(. ~ model, data = tab_wide_is_available, FUN = sum)
   # what is the possible maximum?
   available_per_model_max <- apply(available_per_model[, cols_numbers], MARGIN = 2, FUN = max)
   available_per_model_rel <- available_per_model
@@ -157,6 +158,7 @@ xtable_summary_tab <- function(summary_tab){
     inds <- which(summary_tab$available_per_model[, co] < summary_tab$available_per_model_max[co] &
                     !is.na(tab[, co]))
     tab[, co] <- format(tab[, co], digits = 0, scientific = FALSE, big.mark = ",")
+    tab[grepl("NA", tab[, co]), co] <- "" # remove NA
     tab[inds, co] <- paste0(tab[inds, co], "*")
   }
   
@@ -185,10 +187,10 @@ xtable_summary_tab <- function(summary_tab){
 
 ## 1 + 2 wk
 summary_gm_inc_case <- generate_summary(dat_eval = dat_evaluation, target_type = "case", inc_or_cum = "inc", location = "GM",
-                                        first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+                                        first_forecast_date = as.Date("2020-10-12"), last_observation_date = as.Date("2020-12-19"))
 
 summary_gm_cum_case <- generate_summary(dat_eval = dat_evaluation, target_type = "case", inc_or_cum = "cum", location = "GM",
-                                        first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+                                        first_forecast_date = as.Date("2020-10-12"), last_observation_date = as.Date("2020-12-19"))
 
 
 summary_gm_inc_case_12 <- restrict_summary(summary_gm_inc_case)
@@ -209,10 +211,10 @@ summary_gm_case_34 <- merge_inc_cum_summaries(summary_gm_inc_case_34,
 
 ## 1 + 2 wk
 summary_gm_inc_death <- generate_summary(dat_eval = dat_evaluation, target_type = "death", inc_or_cum = "inc", location = "GM",
-                                         first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+                                         first_forecast_date = as.Date("2020-10-12"), last_observation_date = as.Date("2020-12-19"))
 
 summary_gm_cum_death <- generate_summary(dat_eval = dat_evaluation, target_type = "death", inc_or_cum = "cum", location = "GM",
-                                         first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+                                         first_forecast_date = as.Date("2020-10-12"), last_observation_date = as.Date("2020-12-19"))
 
 
 summary_gm_inc_death_12 <- restrict_summary(summary_gm_inc_death)
@@ -234,10 +236,10 @@ summary_gm_death_34 <- merge_inc_cum_summaries(summary_gm_inc_death_34,
 
 ## 1 + 2 wk
 summary_pl_inc_case <- generate_summary(dat_eval = dat_evaluation, target_type = "case", inc_or_cum = "inc", location = "PL",
-                                        first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+                                        first_forecast_date = as.Date("2020-10-12"), last_observation_date = as.Date("2020-12-19"))
 
 summary_pl_cum_case <- generate_summary(dat_eval = dat_evaluation, target_type = "case", inc_or_cum = "cum", location = "PL",
-                                        first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+                                        first_forecast_date = as.Date("2020-10-12"), last_observation_date = as.Date("2020-12-19"))
 
 
 summary_pl_inc_case_12 <- restrict_summary(summary_pl_inc_case)
@@ -257,10 +259,10 @@ summary_pl_case_34 <- merge_inc_cum_summaries(summary_pl_inc_case_34,
 
 ## 1 + 2 wk
 summary_pl_inc_death <- generate_summary(dat_eval = dat_evaluation, target_type = "death", inc_or_cum = "inc", location = "PL",
-                                         first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+                                         first_forecast_date = as.Date("2020-10-12"), last_observation_date = as.Date("2020-12-19"))
 
 summary_pl_cum_death <- generate_summary(dat_eval = dat_evaluation, target_type = "death", inc_or_cum = "cum", location = "PL",
-                                         first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+                                         first_forecast_date = as.Date("2020-10-12"), last_observation_date = as.Date("2020-12-19"))
 
 
 summary_pl_inc_death_12 <- restrict_summary(summary_pl_inc_death)
@@ -372,6 +374,78 @@ legend("center", legend = c(models_horizons_poland, "KIT-baseline"),
 dev.off()
 
 
+
+
+# alternative plot with model categories as colours:
+model_categories <- c(
+  "KIT-baseline" = "baseline",
+  "KIT-time_series_baseline" = "baseline",
+  "KIT-extrapolation_baseline" = "baseline",
+  "epiforecasts-EpiExpert" = "human_judgement",
+  "epiforecasts-EpiNow2" = "renewal_eq",
+  "FIAS_FZJ-Epi1Ger" = "compartmental",
+  "SDSC_ISG-TrendModel" = "renewal_eq",
+  "ICM-agentModel" = "micro_sim",
+  "IHME-CurveFit" = "compartmental",
+  "Imperial-ensemble2" = "ensemble",
+  "ITWW-county_repro" = "renewal_eq",
+  "LANL-GrowthRate" = "reneqal_eq",
+  "LeipzigIMISE-SECIR" = "compartmental",
+  "MIMUW-StochSEIR" = "compartmental",
+  "MIT_CovidAnalytics-DELPHI" = "compartmental",
+  "MOCOS-agent1" = "micro_sim",
+  "UCLA-SuEIR" = "compartmental",
+  "USC-SIkJalpha" = "compartmental",
+  "Karlen-pypm" = "compartmental",
+  "KITCOVIDhub-mean_ensemble" = "ensemble",
+  "KITCOVIDhub-median_ensemble" = "ensemble",
+  "KITCOVIDhub-inverse_wis_ensemble" = "ensemble"
+)
+cols_categories <- c("compartmental" = "blue",
+                     "micro_sim" = "darkorange",
+                     "renewal_eq" = "red",
+                     "human_judgement" = "green",
+                     "ensemble" = "black",
+                     "baseline" = "darkgrey")
+
+
+pdf("../figures/performance_horizons_by_type.pdf", width = 9, height = 6)
+par(mfrow = c(2, 3), mar = c(4, 4, 3, 0.5))
+plot_performance_decay(summary_gm_inc_case, models = models_horizons_germany,
+                       col = cols_categories[model_categories[models_horizons_germany]],
+                       log = TRUE, max_horizon = 4)
+title("Incident cases, Germany")
+
+plot_performance_decay(summary_gm_inc_death, models = models_horizons_germany,
+                       col = cols_categories[model_categories[models_horizons_germany]],
+                       log = TRUE)
+title("Incident deaths, Germany")
+
+plot(NULL, xlim = 0:1, ylim = 0:1, axes = FALSE, xlab = "", ylab = "")
+legend("center", legend = c("compartmental", "microsimulation", "renewal equation",
+                            "human judg.", "ensemble", "baseline"),
+       col = cols_categories,
+       lty = c(rep(1, length(models_pl$main) + 1), 2, NA),
+       pch = c(rep(NA, length(models_horizons_poland)), 15))
+
+plot_performance_decay(summary_pl_inc_case, models = models_horizons_poland,
+                       col = cols_categories[model_categories[models_horizons_poland]], log = TRUE)
+title("Incident cases, Poland")
+
+plot_performance_decay(summary_pl_inc_death, models = models_horizons_poland,
+                       col = cols_categories[model_categories[models_horizons_poland]], log = TRUE)
+title("Incident deaths, Poland")
+
+
+plot(NULL, xlim = 0:1, ylim = 0:1, axes = FALSE, xlab = "", ylab = "")
+legend("center", legend = c("compartmental", "microsimulation", "renewal equation",
+                            "human judgement", "ensemble", "baseline"),
+       col = cols_categories,
+       lty = c(rep(1, length(models_pl$main) + 1), 2, NA),
+       pch = c(rep(NA, length(models_horizons_poland)), 15))
+dev.off()
+
+
 ### compute tables for additional ensembles (i.e. with all models included):
 
 dat_evaluation_additional_ensembles <- read.csv("additional_ensembles/evaluation_additional_ensembles_ECDC.csv",
@@ -383,10 +457,10 @@ dat_evaluation_additional_ensembles <- read.csv("additional_ensembles/evaluation
 
 ## 1 + 2 wk
 summary_gm_inc_case <- generate_summary(dat_eval = dat_evaluation_additional_ensembles, target_type = "case", inc_or_cum = "inc", location = "GM",
-                                        first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+                                        first_forecast_date = as.Date("2020-10-12"), last_observation_date = as.Date("2020-12-19"))
 
 summary_gm_cum_case <- generate_summary(dat_eval = dat_evaluation_additional_ensembles, target_type = "case", inc_or_cum = "cum", location = "GM",
-                                        first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+                                        first_forecast_date = as.Date("2020-10-12"), last_observation_date = as.Date("2020-12-19"))
 
 
 summary_gm_inc_case_12 <- restrict_summary(summary_gm_inc_case)
@@ -407,10 +481,10 @@ summary_gm_case_34 <- merge_inc_cum_summaries(summary_gm_inc_case_34,
 
 ## 1 + 2 wk
 summary_gm_inc_death <- generate_summary(dat_eval = dat_evaluation_additional_ensembles, target_type = "death", inc_or_cum = "inc", location = "GM",
-                                         first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+                                         first_forecast_date = as.Date("2020-10-12"), last_observation_date = as.Date("2020-12-19"))
 
 summary_gm_cum_death <- generate_summary(dat_eval = dat_evaluation_additional_ensembles, target_type = "death", inc_or_cum = "cum", location = "GM",
-                                         first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+                                         first_forecast_date = as.Date("2020-10-12"), last_observation_date = as.Date("2020-12-19"))
 
 
 summary_gm_inc_death_12 <- restrict_summary(summary_gm_inc_death)
@@ -432,10 +506,10 @@ summary_gm_death_34 <- merge_inc_cum_summaries(summary_gm_inc_death_34,
 
 ## 1 + 2 wk
 summary_pl_inc_case <- generate_summary(dat_eval = dat_evaluation_additional_ensembles, target_type = "case", inc_or_cum = "inc", location = "PL",
-                                        first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+                                        first_forecast_date = as.Date("2020-10-12"), last_observation_date = as.Date("2020-12-19"))
 
 summary_pl_cum_case <- generate_summary(dat_eval = dat_evaluation_additional_ensembles, target_type = "case", inc_or_cum = "cum", location = "PL",
-                                        first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+                                        first_forecast_date = as.Date("2020-10-12"), last_observation_date = as.Date("2020-12-19"))
 
 
 summary_pl_inc_case_12 <- restrict_summary(summary_pl_inc_case)
@@ -455,10 +529,10 @@ summary_pl_case_34 <- merge_inc_cum_summaries(summary_pl_inc_case_34,
 
 ## 1 + 2 wk
 summary_pl_inc_death <- generate_summary(dat_eval = dat_evaluation_additional_ensembles, target_type = "death", inc_or_cum = "inc", location = "PL",
-                                         first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+                                         first_forecast_date = as.Date("2020-10-12"), last_observation_date = as.Date("2020-12-19"))
 
 summary_pl_cum_death <- generate_summary(dat_eval = dat_evaluation_additional_ensembles, target_type = "death", inc_or_cum = "cum", location = "PL",
-                                         first_date = as.Date("2020-10-12"), last_date = as.Date("2020-12-14"))
+                                         first_forecast_date = as.Date("2020-10-12"), last_observation_date = as.Date("2020-12-19"))
 
 
 summary_pl_inc_death_12 <- restrict_summary(summary_pl_inc_death)

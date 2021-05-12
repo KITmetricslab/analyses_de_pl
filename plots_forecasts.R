@@ -4,6 +4,7 @@
 
 library(here)
 library(plotrix)
+library(colorspace)
 
 # set language to English (Unix systems)
 Sys.setlocale(category = "LC_TIME", locale = "en_US.UTF8")
@@ -62,7 +63,7 @@ for(model_cat in c("main", "others")){
     legend("topright", col = c("darkgrey", "lightgrey"), legend = c("50% PI", "95% PI"), pch = 15, bty = "n")
     legend("bottomright", col = "black", lty = 1, pch = 15, legend = "observed\n (ECDC)", cex = 0.9, bty = "n")
     lines(dat_truth_gm$date, dat_truth_gm$inc_case, type = "o", pch = 15)
-    title(paste("Weekly reported cases, Germany,", h, "wk ahead"))
+    title(paste("Weekly incident cases, Germany,", h, "wk ahead"))
     
     plot_scores(scores = dat_eval_list,
                 target = "inc case",
@@ -82,7 +83,7 @@ for(model_cat in c("main", "others")){
                    width = 0.4, col = cols[models_gm[[model_cat]]], pch = pchs[models_gm[[model_cat]]],
                    start = x_start, end = x_end, 
                    shifts = shifts, legend = FALSE, ylim = c(0, 5000))
-    title(paste("Weekly reported deaths, Germany,", h, "wk ahead"))
+    title(paste("Weekly incident deaths, Germany,", h, "wk ahead"))
     lines(dat_truth_gm$date, dat_truth_gm$inc_death, type = "o", pch = 15)
     
     # deaths, DE:
@@ -102,7 +103,7 @@ for(model_cat in c("main", "others")){
                    width = 0.4, col = cols[models_pl[[model_cat]]], pch = pchs[models_pl[[model_cat]]],
                    start = x_start, end = x_end, 
                    shifts = shifts, legend = TRUE, ylim = c(0, 400000))
-    title(paste("Weekly reported cases, Poland,", h, "wk ahead"))
+    title(paste("Weekly incident cases, Poland,", h, "wk ahead"))
     lines(dat_truth_pl$date, dat_truth_pl$inc_case, type = "o", pch = 15)
     
     # coverage
@@ -123,7 +124,7 @@ for(model_cat in c("main", "others")){
                    width = 0.4, col = cols[models_pl[[model_cat]]], pch = pchs[models_pl[[model_cat]]],
                    start = x_start, end = x_end, 
                    shifts = shifts, legend = FALSE, ylim = c(0, 6000))
-    title(paste("Weekly reported deaths, Poland,", h, "wk ahead"))
+    title(paste("Weekly incident deaths, Poland,", h, "wk ahead"))
     lines(dat_truth_pl$date, dat_truth_pl$inc_death, type = "o", pch = 15)
     
     # coverage:
@@ -145,7 +146,7 @@ pdf(paste0("../figures/plot_point_forecasts_gm.pdf"), width = 12, height = 4)
 par(mfrow = 1:2, las = 1)
 
 models_gm_long <- c(models_gm$main,
-                    "LeipzigIMISE-SECIR", "Geneva-DeterministicGrowth",
+                    "LeipzigIMISE-SECIR", "SDSC_ISG-TrendModel",
                     "UCLA-SuEIR", "USC-SIkJalpha")
 models_gm_long <- models_gm_long[models_gm_long != "LANL-GrowthRate"] # LANL not available
 
@@ -213,8 +214,8 @@ plot_from_eval(dat_eval = dat_eval_2wk,
                shifts = seq(from = -1.5, to = 1.5, length.out = length(models_pl_ensemble2)),
                legend = TRUE,
                ylim = c(0, 11000), show_intervals = TRUE, separate_intervals = TRUE)
-mtext(side = 3, "Incident deaths, Poland, forecasts issued on 30 Nov 2020", 
-      at = as.Date("2020-12-20"), line = 1)
+mtext(side = 3, "Incident deaths, Poland, forecasts issued\n on 30 Nov 2020", 
+      at = as.Date("2020-12-20"), line = 1, font = 2)
 legend("bottomright", col = "black", lty = 1, pch = 15, legend = "observed\n (ECDC)", cex = 0.9, bty = "n")
 
 
@@ -249,8 +250,8 @@ plot_from_eval(dat_eval = dat_eval_2wk,
                shifts = seq(from = -1.5, to = 1.5, length.out = length(models_pl_ensemble)),
                legend = TRUE,
                ylim = c(0, 360000), show_intervals = TRUE, separate_intervals = TRUE)
-mtext(side = 3, "Incident cases, Poland, forecasts issued on 02 Nov 2020", 
-      at = as.Date("2020-11-26"), line = 1)
+mtext(side = 3, "Incident cases, Poland, forecasts issued\n on 02 Nov 2020", 
+      at = as.Date("2020-11-26"), line = 1, font = 2)
 
 plot_from_eval(dat_eval = dat_eval_2wk,
                model = c("KITCOVIDhub-median_ensemble",
